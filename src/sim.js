@@ -7,17 +7,6 @@ const util = require('./util');
 const Chance = require('chance');
 const chance = new Chance();
 
-exports.sys = {
-    sims: 10,
-    label: moment().toISOString(),
-    game: null,
-    log: true,
-    save: true,
-    game_options: {
-        x_move_first: true
-    }
-};
-
 function saveState(game) {
     fs.appendFileSync(game.file, game.game_num+"\t"+game.moves+"\t"+game.winner+"\t"+JSON.stringify(game.state)+"\n");
 }
@@ -32,6 +21,21 @@ exports.makeMove = (state, player) => {
     possible_moves.length-1
     return possible_moves[chance.integer({ min: 0, max: possible_moves.length-1 })];
 }
+
+exports.sys = {
+    sims: 10,
+    label: moment().toISOString(),
+    game: null,
+    log: true,
+    save: true,
+    game_options: {
+        x_move_first: true,
+        movers: {
+            'X': exports.makeMove,
+            'O': exports.makeMove
+        }
+    }
+};
 
 exports.win_states = [
     // horizontal
@@ -81,7 +85,7 @@ exports.checkWinner = (game) => {
 function runGame(game, log, save) {
     while(game.winner === null) {
         // make play
-        let move = exports.makeMove(game.state, game.x_to_move ? 'X' : 'O');
+        let move = exports.sys.game_options.movers[game.x_to_move ? 'X' : 'O'](game.state, game.x_to_move ? 'X' : 'O');
         // console.log("MOVE INTERNAL: ",move, game.x_to_move ? 'X' : 'O');
         if(move !== false) {
             // update game progression
